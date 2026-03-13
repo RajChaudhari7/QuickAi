@@ -194,19 +194,47 @@ export const resumeReview = async (req, res) => {
         const resume = req.file;
         const plan = req.plan;
 
-        if (plan !== 'premium') {
-            return res.json({ success: false, message: "This featiure is only available for premuim subscriptions" })
+        if (plan !== "premium") {
+            return res.json({
+                success: false,
+                message: "This feature is only available for premium subscriptions"
+            });
+        }
+
+        if (!resume) {
+            return res.json({
+                success: false,
+                message: "Resume file is required"
+            });
         }
 
         if (resume.size > 5 * 1024 * 1024) {
-            return res.json({ success: false, message: "Resume file should be less than 5MB" })
+            return res.json({
+                success: false,
+                message: "Resume file should be less than 5MB"
+            });
         }
 
-        const dataBuffer = fs.readFileSync(resume.path)
-        const pdfData = await pdf(dataBuffer)
+        const dataBuffer = fs.readFileSync(resume.path);
+        const pdfData = await pdf(dataBuffer);
 
-        const prompt = `Review the following resume and provide constructive feedback on its strengths , weakness , \
-            and areas for improvement. Resume Content:\n\n${pdfData.text}`
+        const prompt = `
+Analyze the following resume and return the response ONLY in JSON format.
+
+Required JSON structure:
+
+{
+  "score": number (0-100),
+  "ats_score": number (0-100),
+  "strengths": ["point1","point2"],
+  "improvements": ["point1","point2"],
+  "missing_keywords": ["keyword1","keyword2"],
+  "analysis": "Detailed markdown resume feedback"
+}
+
+Resume:
+${pdfData.text}
+`;
 
         const response = await AI.chat.completions.create({
             model: "gemini-3-flash-preview",
@@ -216,19 +244,35 @@ export const resumeReview = async (req, res) => {
                     content: prompt,
                 },
             ],
-            temperature: 0.7,
+            temperature: 0.4,
             max_tokens: 1000,
         });
 
-        const content = response.choices[0].message.content
+        let aiText = response.choices[0].message.content;
 
-        await sql` INSERT INTO creations (user_id, prompt, content, type) VALUES (${userId} , 'Reveiw the uploaded resume.' , ${content}, 'resume-review')`;
+        // remove markdown formatting if present
+        aiText = aiText.replace(/```json|```/g, "").trim();
 
-        res.json({ success: true, content })
+        const parsed = JSON.parse(aiText);
+
+        await sql`
+        INSERT INTO creations (user_id, prompt, content, type)
+        VALUES (${userId}, 'Review the uploaded resume.', ${JSON.stringify(parsed)}, 'resume-review')
+        `;
+
+        res.json({
+            success: true,
+            content: parsed
+        });
 
     } catch (error) {
-        console.log(error.message)
-        res.json({ success: false, message: error.message })
+
+        console.log(error);
+
+        res.json({
+            success: false,
+            message: error.message
+        });
 
     }
-}
+};

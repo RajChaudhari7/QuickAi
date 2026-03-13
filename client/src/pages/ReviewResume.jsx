@@ -1,105 +1,260 @@
-import { FileText, Sparkles } from 'lucide-react';
-import React, { useState } from 'react'
-import axios from 'axios'
-import { useAuth } from '@clerk/clerk-react';
-import toast from 'react-hot-toast';
-import Markdown from 'react-markdown';
-
+import { FileText, Sparkles, Upload } from "lucide-react";
+import React, { useState } from "react";
+import axios from "axios";
+import { useAuth } from "@clerk/clerk-react";
+import toast from "react-hot-toast";
+import Markdown from "react-markdown";
 
 axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 
 const ReviewResume = () => {
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [content, setContent] = useState('')
 
-  const { getToken } = useAuth()
+  const [input, setInput] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const { getToken } = useAuth();
 
   const onSubmitHandler = async (e) => {
+
     e.preventDefault();
+
+    if (!input) return toast.error("Upload resume");
+
     try {
 
-      setLoading(true)
+      setLoading(true);
 
-      const formData = new FormData()
-      formData.append('resume', input)
+      const formData = new FormData();
+      formData.append("resume", input);
 
-      const { data } = await axios.post('/api/ai/resume-review', formData, {
-        headers: {
-          Authorization: `Bearer ${await getToken()}`
+      const { data } = await axios.post(
+        "/api/ai/resume-review",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${await getToken()}`
+          }
         }
-      })
+      );
 
       if (data.success) {
-        setContent(data.content)
+        setResult(data.content);
       } else {
-        toast.error(data.message)
+        toast.error(data.message);
       }
 
     } catch (error) {
-      toast.error(error.message)
+      toast.error(error.message);
     }
-    setLoading(false)
-  }
+
+    setLoading(false);
+  };
+
   return (
-    <div className='h-full overflow-y-scroll p-6 flex items-start flex-wrap gap-4 text-slate-700 '>
+    <div className="h-full overflow-y-auto p-8 bg-gray-50">
 
-      {/* left col */}
-      <form onSubmit={onSubmitHandler} className='w-full max-w-lg p-4 bg-white rounded-lg border border-gray-200'>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-        <div className='flex items-center gap-3'>
-          <Sparkles className='w-6 text-[#00DA83]' />
-          <h1 className='text-xl font-semibold'>Review Resume</h1>
-        </div>
+        {/* LEFT PANEL */}
 
-        <p className='mt-6 text-sm font-medium'>Upload Resume</p>
+        <form
+          onSubmit={onSubmitHandler}
+          className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm"
+        >
 
-        <input onChange={(e) => setInput(e.target.files[0])}
-          type="file" accept='application/pdf' className='cursor-pointer w-full p-2 px-3 mt-2 outline-none text-sm rounded-md border border-gray-300 text-gray-600'
-          required />
+          <div className="flex items-center gap-3 mb-6">
+            <Sparkles className="w-6 text-emerald-500" />
+            <h1 className="text-xl font-semibold">
+              AI Resume Reviewer
+            </h1>
+          </div>
 
-        <p className='text-sm text-gray-500 font-light mt-1'>Supports pdf resume only.</p>
-        <button disabled={loading} className='w-full flex justify-center items-center gap-2 bg-gradient-to-r from-[#00Da83]
-          to-[#009BB3] text-white px-4 py-2 mt-6 text-sm rounded-lg cursor-pointer'>
-          {
-            loading ? <span className='w-4 h-4 my-1 rounded-full border-2 border-t-transparent animate-spin'></span>
-              : <FileText className='w-5' />
-          }
+          <div>
 
-          Review Resume
-        </button>
-      </form>
+            <label className="text-sm font-medium text-gray-600">
+              Upload Resume
+            </label>
 
-      {/* right col */}
-      <div className='w-full max-w-lg p-4 bg-white rounded-lg flex flex-col border border-gray-200 min-h-96 max-h-[600px]'>
-        <div className='flex items-center gap-3'>
-          <FileText className='w-5 h-5 text-[#00DA83]' />
-          <h1 className='text-xl font-semibold'>Analysis Result</h1>
-        </div>
+            <div className="mt-3 border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-emerald-400 transition">
 
-        {
-          !content ? (
-            <div className='flex-1 flex justify-center items-center'>
-              <div className='text-sm flex flex-col items-center gap-5 text-gray-400'>
-                <FileText className='w-9 h-9' />
-                <p>Upload an resume and click "Review Resume" to get started.</p>
-              </div>
+              <input
+                type="file"
+                accept="application/pdf"
+                required
+                onChange={(e) => setInput(e.target.files[0])}
+                className="hidden"
+                id="resumeUpload"
+              />
+
+              <label
+                htmlFor="resumeUpload"
+                className="cursor-pointer flex flex-col items-center gap-3"
+              >
+
+                <Upload className="w-8 h-8 text-gray-400" />
+
+                <p className="text-sm text-gray-500">
+                  Click to upload your resume
+                </p>
+
+                <span className="text-xs text-gray-400">
+                  PDF format only
+                </span>
+
+              </label>
+
             </div>
+
+          </div>
+
+          <button
+            disabled={loading}
+            className="w-full mt-8 flex items-center justify-center gap-2
+            bg-gradient-to-r from-emerald-500 to-teal-500
+            text-white py-3 rounded-lg text-sm font-medium
+            hover:opacity-90 transition"
+          >
+
+            {loading ? (
+              <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            ) : (
+              <FileText className="w-5 h-5" />
+            )}
+
+            Review Resume
+
+          </button>
+
+        </form>
+
+
+        {/* RIGHT PANEL */}
+
+        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col">
+
+          <div className="flex items-center gap-3 mb-6">
+            <FileText className="w-5 h-5 text-emerald-500" />
+            <h1 className="text-xl font-semibold">
+              Resume Analysis
+            </h1>
+          </div>
+
+          {!result ? (
+
+            <div className="flex flex-1 flex-col justify-center items-center text-gray-400 gap-4">
+
+              <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center">
+                <FileText className="w-7 h-7" />
+              </div>
+
+              <p className="text-sm text-center">
+                Upload your resume and get AI-powered feedback
+              </p>
+
+            </div>
+
           ) : (
-            <div className='mt-3 h-full overflow-y-scroll text-sm text-slate-600'>
-              <div className='reset-tw'>
-                <Markdown>
-                  {content}
-                </Markdown>
+
+            <div className="space-y-6 overflow-y-auto">
+
+              {/* SCORE */}
+
+              <div className="grid grid-cols-2 gap-4">
+
+                <div className="bg-emerald-50 p-4 rounded-lg text-center">
+                  <p className="text-xs text-gray-500">Resume Score</p>
+                  <p className="text-2xl font-bold text-emerald-600">
+                    {result.score}%
+                  </p>
+                </div>
+
+                <div className="bg-blue-50 p-4 rounded-lg text-center">
+                  <p className="text-xs text-gray-500">ATS Score</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {result.ats_score}%
+                  </p>
+                </div>
+
               </div>
+
+
+              {/* STRENGTHS */}
+
+              <div>
+
+                <h3 className="font-semibold mb-2">
+                  Strengths
+                </h3>
+
+                <ul className="list-disc list-inside text-sm text-gray-600">
+                  {result.strengths?.map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+
+              </div>
+
+
+              {/* IMPROVEMENTS */}
+
+              <div>
+
+                <h3 className="font-semibold mb-2">
+                  Suggestions
+                </h3>
+
+                <ul className="list-disc list-inside text-sm text-gray-600">
+                  {result.improvements?.map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+
+              </div>
+
+
+              {/* MISSING KEYWORDS */}
+
+              <div>
+
+                <h3 className="font-semibold mb-2">
+                  Missing Keywords
+                </h3>
+
+                <div className="flex flex-wrap gap-2">
+                  {result.missing_keywords?.map((k, i) => (
+                    <span
+                      key={i}
+                      className="bg-gray-100 text-xs px-2 py-1 rounded"
+                    >
+                      {k}
+                    </span>
+                  ))}
+                </div>
+
+              </div>
+
+
+              {/* ANALYSIS */}
+
+              <div className="prose max-w-none text-sm">
+
+                <Markdown>
+                  {result.analysis}
+                </Markdown>
+
+              </div>
+
             </div>
-          )
-        }
+
+          )}
+
+        </div>
 
       </div>
 
     </div>
-  )
-}
+  );
+};
 
-export default ReviewResume
+export default ReviewResume;

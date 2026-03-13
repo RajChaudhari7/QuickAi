@@ -1,98 +1,128 @@
-import React, { useEffect, useState } from 'react'
-import { dummyCreationData } from '../assets/assets'
-import { Gem, Sparkles } from 'lucide-react'
-import { Protect, useAuth } from '@clerk/clerk-react'
-import CreationItem from '../components/CreationItem'
-import axios from 'axios'
-import toast from 'react-hot-toast'
+import React, { useEffect, useState } from "react";
+import { Gem, Sparkles } from "lucide-react";
+import { Protect, useAuth } from "@clerk/clerk-react";
+import CreationItem from "../components/CreationItem";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 
-
 const Dashboard = () => {
+  const [creations, setCreations] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [creations, setCreations] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  const { getToken } = useAuth()
+  const { getToken } = useAuth();
 
   const getDashboardData = async () => {
     try {
-
-      const { data } = await axios.get('/api/user/get-user-creations', {
-        headers: { Authorization: `Bearer ${await getToken()}` }
-      })
+      const { data } = await axios.get("/api/user/get-user-creations", {
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
 
       if (data.success) {
-        setCreations(data.creations)
+        setCreations(data.creations);
       } else {
-        toast.error(data.message)
+        toast.error(data.message);
       }
-
     } catch (error) {
-      toast.error(error.message)
+      toast.error(error.message);
     }
-    setLoading(false)
-  }
+
+    setLoading(false);
+  };
 
   useEffect(() => {
-    getDashboardData()
-  }, [])
+    getDashboardData();
+  }, []);
 
   return (
-    <div className='h-full overflow-y-scroll p-6'>
-      <div className='flex justify-start gap-4 flex-wrap'>
+    <div className="h-full overflow-y-auto p-8 bg-gray-50">
 
-        {/* Total creation cart */}
-        <div className='flex items-center justify-between w-72 p-4 px-6 bg-white rounded-xl border border-gray-200'>
+      {/* PAGE TITLE */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Dashboard
+        </h1>
+        <p className="text-gray-500 text-sm">
+          Manage and track your AI creations
+        </p>
+      </div>
 
-          <div className='text-slate-600'>
-            <p className='text-sm'>Total Creations</p>
-            <h2 className='text-xl font-semibold'>{creations.length}</h2>
+      {/* STATS CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        {/* TOTAL CREATIONS */}
+        <div className="flex items-center justify-between p-6 rounded-2xl bg-white shadow-sm border border-gray-200 hover:shadow-md transition">
+
+          <div>
+            <p className="text-gray-500 text-sm">
+              Total Creations
+            </p>
+
+            <h2 className="text-3xl font-semibold mt-1">
+              {creations.length}
+            </h2>
           </div>
 
-          <div className='w-10 h-10 rounded-lg bg-gradient-to-br from-[#3588F2] to-[#0BB0D7] text-white flex justify-center items-center'>
-            <Sparkles className='w-5 text-white' />
+          <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white">
+            <Sparkles className="w-6 h-6" />
           </div>
         </div>
 
-        {/* Total Active Plan card */}
-        <div className='flex items-center justify-between w-72 p-4 px-6 bg-white rounded-xl border border-gray-200'>
+        {/* ACTIVE PLAN */}
+        <div className="flex items-center justify-between p-6 rounded-2xl bg-white shadow-sm border border-gray-200 hover:shadow-md transition">
 
-          <div className='text-slate-600'>
-            <p className='text-sm'>Active Plan</p>
-            <h2 className='text-xl font-semibold'>
-              <Protect plan='premium' fallback='Free'>
+          <div>
+            <p className="text-gray-500 text-sm">
+              Active Plan
+            </p>
+
+            <h2 className="text-3xl font-semibold mt-1">
+              <Protect plan="premium" fallback="Free">
                 Premium
               </Protect>
             </h2>
           </div>
 
-          <div className='w-10 h-10 rounded-lg bg-gradient-to-br from-[#FF61C5] to-[#9E53EE] text-white flex justify-center items-center'>
-            <Gem className='w-5 text-white' />
+          <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 text-white">
+            <Gem className="w-6 h-6" />
           </div>
         </div>
 
       </div>
 
-      {
-        loading ? (
-          <div className='flex justify-center items-center h-3/4'>
-            <div className='animate-spin rounded-full h-11 w-11 border-3 border-purple-500 border-t-transparent'></div>
+      {/* RECENT CREATIONS */}
+      <div className="mt-10">
+
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-semibold">
+            Recent Creations
+          </h2>
+
+          <span className="text-sm text-gray-400">
+            {creations.length} items
+          </span>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin h-10 w-10 border-4 border-purple-500 border-t-transparent rounded-full"></div>
           </div>
-        ): (
-            <div className = 'space-y-3'>
-        <p className = 'mt-6 mb-4'>Recent Creations</p>
-        {
-    creations.map((item) => <CreationItem key={item.id} item={item} />)
-  }
-      </div >
-        )
-      }
+        ) : creations.length === 0 ? (
+          <div className="bg-white border border-gray-200 rounded-xl p-10 text-center text-gray-500">
+            No creations yet 🚀
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {creations.map((item) => (
+              <CreationItem key={item.id} item={item} />
+            ))}
+          </div>
+        )}
+      </div>
 
+    </div>
+  );
+};
 
-    </div >
-  )
-}
-
-export default Dashboard
+export default Dashboard;
