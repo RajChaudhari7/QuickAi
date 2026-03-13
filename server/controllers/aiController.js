@@ -71,7 +71,7 @@ export const generateBlogtitle = async (req, res) => {
         }
 
         const response = await AI.chat.completions.create({
-            model: "gemini-2.0-flash",
+            model: "gemini-3-flash-preview",
             messages: [
                 {
                     role: "user",
@@ -195,7 +195,7 @@ export const resumeReview = async (req, res) => {
             and areas for improvement. Resume Content:\n\n${pdfData.text}`
 
         const response = await AI.chat.completions.create({
-            model: "gemini-2.0-flash",
+            model: "gemini-3-flash-preview",
             messages: [
                 {
                     role: "user",
