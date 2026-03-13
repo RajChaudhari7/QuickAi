@@ -19,7 +19,9 @@ const ReviewResume = () => {
 
     e.preventDefault();
 
-    if (!input) return toast.error("Upload resume");
+    if (!input) {
+      return toast.error("Please upload a resume");
+    }
 
     try {
 
@@ -33,7 +35,8 @@ const ReviewResume = () => {
         formData,
         {
           headers: {
-            Authorization: `Bearer ${await getToken()}`
+            Authorization: `Bearer ${await getToken()}`,
+            "Content-Type": "multipart/form-data"
           }
         }
       );
@@ -45,10 +48,12 @@ const ReviewResume = () => {
       }
 
     } catch (error) {
-      toast.error(error.message);
-    }
 
-    setLoading(false);
+      toast.error(error.response?.data?.message || error.message);
+
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -70,41 +75,49 @@ const ReviewResume = () => {
             </h1>
           </div>
 
-          <div>
+          <label className="text-sm font-medium text-gray-600">
+            Upload Resume
+          </label>
 
-            <label className="text-sm font-medium text-gray-600">
-              Upload Resume
+          <div className="mt-3 border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-emerald-400 transition">
+
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => setInput(e.target.files[0])}
+              className="hidden"
+              id="resumeUpload"
+            />
+
+            <label
+              htmlFor="resumeUpload"
+              className="cursor-pointer flex flex-col items-center gap-3"
+            >
+
+              <Upload className="w-8 h-8 text-gray-400" />
+
+              {!input ? (
+                <>
+                  <p className="text-sm text-gray-500">
+                    Click to upload your resume
+                  </p>
+                  <span className="text-xs text-gray-400">
+                    PDF format only
+                  </span>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-emerald-600 font-semibold">
+                    {input.name}
+                  </p>
+
+                  <span className="text-xs text-gray-400">
+                    {(input.size / 1024).toFixed(1)} KB
+                  </span>
+                </>
+              )}
+
             </label>
-
-            <div className="mt-3 border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-emerald-400 transition">
-
-              <input
-                type="file"
-                accept="application/pdf"
-                required
-                onChange={(e) => setInput(e.target.files[0])}
-                className="hidden"
-                id="resumeUpload"
-              />
-
-              <label
-                htmlFor="resumeUpload"
-                className="cursor-pointer flex flex-col items-center gap-3"
-              >
-
-                <Upload className="w-8 h-8 text-gray-400" />
-
-                <p className="text-sm text-gray-500">
-                  Click to upload your resume
-                </p>
-
-                <span className="text-xs text-gray-400">
-                  PDF format only
-                </span>
-
-              </label>
-
-            </div>
 
           </div>
 
@@ -158,7 +171,7 @@ const ReviewResume = () => {
 
             <div className="space-y-6 overflow-y-auto">
 
-              {/* SCORE */}
+              {/* SCORE CARDS */}
 
               <div className="grid grid-cols-2 gap-4">
 
@@ -178,48 +191,34 @@ const ReviewResume = () => {
 
               </div>
 
-
               {/* STRENGTHS */}
 
               <div>
-
-                <h3 className="font-semibold mb-2">
-                  Strengths
-                </h3>
+                <h3 className="font-semibold mb-2">Strengths</h3>
 
                 <ul className="list-disc list-inside text-sm text-gray-600">
                   {result.strengths?.map((item, i) => (
                     <li key={i}>{item}</li>
                   ))}
                 </ul>
-
               </div>
 
-
-              {/* IMPROVEMENTS */}
+              {/* SUGGESTIONS */}
 
               <div>
-
-                <h3 className="font-semibold mb-2">
-                  Suggestions
-                </h3>
+                <h3 className="font-semibold mb-2">Suggestions</h3>
 
                 <ul className="list-disc list-inside text-sm text-gray-600">
                   {result.improvements?.map((item, i) => (
                     <li key={i}>{item}</li>
                   ))}
                 </ul>
-
               </div>
-
 
               {/* MISSING KEYWORDS */}
 
               <div>
-
-                <h3 className="font-semibold mb-2">
-                  Missing Keywords
-                </h3>
+                <h3 className="font-semibold mb-2">Missing Keywords</h3>
 
                 <div className="flex flex-wrap gap-2">
                   {result.missing_keywords?.map((k, i) => (
@@ -231,18 +230,14 @@ const ReviewResume = () => {
                     </span>
                   ))}
                 </div>
-
               </div>
-
 
               {/* ANALYSIS */}
 
               <div className="prose max-w-none text-sm">
-
                 <Markdown>
                   {result.analysis}
                 </Markdown>
-
               </div>
 
             </div>
