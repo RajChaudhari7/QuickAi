@@ -11,17 +11,12 @@ const ReviewResume = () => {
 
   const [input, setInput] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
+  const [content, setContent] = useState("");
 
   const { getToken } = useAuth();
 
   const onSubmitHandler = async (e) => {
-
     e.preventDefault();
-
-    if (!input) {
-      return toast.error("Please upload a resume");
-    }
 
     try {
 
@@ -35,25 +30,22 @@ const ReviewResume = () => {
         formData,
         {
           headers: {
-            Authorization: `Bearer ${await getToken()}`,
-            "Content-Type": "multipart/form-data"
+            Authorization: `Bearer ${await getToken()}`
           }
         }
       );
 
       if (data.success) {
-        setResult(data.content);
+        setContent(data.content);
       } else {
         toast.error(data.message);
       }
 
     } catch (error) {
-
-      toast.error(error.response?.data?.message || error.message);
-
-    } finally {
-      setLoading(false);
+      toast.error(error.message);
     }
+
+    setLoading(false);
   };
 
   return (
@@ -62,7 +54,6 @@ const ReviewResume = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
         {/* LEFT PANEL */}
-
         <form
           onSubmit={onSubmitHandler}
           className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm"
@@ -75,52 +66,46 @@ const ReviewResume = () => {
             </h1>
           </div>
 
-          <label className="text-sm font-medium text-gray-600">
-            Upload Resume
-          </label>
+          {/* UPLOAD */}
+          <div>
 
-          <div className="mt-3 border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-emerald-400 transition">
-
-            <input
-              type="file"
-              accept="application/pdf"
-              onChange={(e) => setInput(e.target.files[0])}
-              className="hidden"
-              id="resumeUpload"
-            />
-
-            <label
-              htmlFor="resumeUpload"
-              className="cursor-pointer flex flex-col items-center gap-3"
-            >
-
-              <Upload className="w-8 h-8 text-gray-400" />
-
-              {!input ? (
-                <>
-                  <p className="text-sm text-gray-500">
-                    Click to upload your resume
-                  </p>
-                  <span className="text-xs text-gray-400">
-                    PDF format only
-                  </span>
-                </>
-              ) : (
-                <>
-                  <p className="text-sm text-emerald-600 font-semibold">
-                    {input.name}
-                  </p>
-
-                  <span className="text-xs text-gray-400">
-                    {(input.size / 1024).toFixed(1)} KB
-                  </span>
-                </>
-              )}
-
+            <label className="text-sm font-medium text-gray-600">
+              Upload Resume
             </label>
+
+            <div className="mt-3 border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-emerald-400 transition">
+
+              <input
+                type="file"
+                accept="application/pdf"
+                required
+                onChange={(e) => setInput(e.target.files[0])}
+                className="hidden"
+                id="resumeUpload"
+              />
+
+              <label
+                htmlFor="resumeUpload"
+                className="cursor-pointer flex flex-col items-center gap-3"
+              >
+
+                <Upload className="w-8 h-8 text-gray-400" />
+
+                <p className="text-sm text-gray-500">
+                  Click to upload your resume
+                </p>
+
+                <span className="text-xs text-gray-400">
+                  PDF format only
+                </span>
+
+              </label>
+
+            </div>
 
           </div>
 
+          {/* BUTTON */}
           <button
             disabled={loading}
             className="w-full mt-8 flex items-center justify-center gap-2
@@ -141,9 +126,7 @@ const ReviewResume = () => {
 
         </form>
 
-
         {/* RIGHT PANEL */}
-
         <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col">
 
           <div className="flex items-center gap-3 mb-6">
@@ -153,7 +136,7 @@ const ReviewResume = () => {
             </h1>
           </div>
 
-          {!result ? (
+          {!content ? (
 
             <div className="flex flex-1 flex-col justify-center items-center text-gray-400 gap-4">
 
@@ -169,76 +152,11 @@ const ReviewResume = () => {
 
           ) : (
 
-            <div className="space-y-6 overflow-y-auto">
+            <div className="overflow-y-auto text-sm text-gray-700 leading-relaxed prose max-w-none">
 
-              {/* SCORE CARDS */}
-
-              <div className="grid grid-cols-2 gap-4">
-
-                <div className="bg-emerald-50 p-4 rounded-lg text-center">
-                  <p className="text-xs text-gray-500">Resume Score</p>
-                  <p className="text-2xl font-bold text-emerald-600">
-                    {result.score}%
-                  </p>
-                </div>
-
-                <div className="bg-blue-50 p-4 rounded-lg text-center">
-                  <p className="text-xs text-gray-500">ATS Score</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {result.ats_score}%
-                  </p>
-                </div>
-
-              </div>
-
-              {/* STRENGTHS */}
-
-              <div>
-                <h3 className="font-semibold mb-2">Strengths</h3>
-
-                <ul className="list-disc list-inside text-sm text-gray-600">
-                  {result.strengths?.map((item, i) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* SUGGESTIONS */}
-
-              <div>
-                <h3 className="font-semibold mb-2">Suggestions</h3>
-
-                <ul className="list-disc list-inside text-sm text-gray-600">
-                  {result.improvements?.map((item, i) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* MISSING KEYWORDS */}
-
-              <div>
-                <h3 className="font-semibold mb-2">Missing Keywords</h3>
-
-                <div className="flex flex-wrap gap-2">
-                  {result.missing_keywords?.map((k, i) => (
-                    <span
-                      key={i}
-                      className="bg-gray-100 text-xs px-2 py-1 rounded"
-                    >
-                      {k}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* ANALYSIS */}
-
-              <div className="prose max-w-none text-sm">
-                <Markdown>
-                  {result.analysis}
-                </Markdown>
-              </div>
+              <Markdown>
+                {content}
+              </Markdown>
 
             </div>
 
