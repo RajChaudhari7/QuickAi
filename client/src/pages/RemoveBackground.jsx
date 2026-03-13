@@ -11,11 +11,18 @@ const RemoveBackground = () => {
   const [input, setInput] = useState(null);
   const [loading, setLoading] = useState(false);
   const [content, setContent] = useState("");
+  const [slider, setSlider] = useState(50);
 
   const { getToken } = useAuth();
 
   const onSubmitHandler = async (e) => {
+
     e.preventDefault();
+
+    if (!input) {
+      toast.error("Please upload an image");
+      return;
+    }
 
     try {
 
@@ -53,6 +60,7 @@ const RemoveBackground = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
         {/* LEFT PANEL */}
+
         <form
           onSubmit={onSubmitHandler}
           className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm"
@@ -66,6 +74,7 @@ const RemoveBackground = () => {
           </div>
 
           {/* FILE INPUT */}
+
           <div>
 
             <label className="text-sm font-medium text-gray-600">
@@ -87,22 +96,47 @@ const RemoveBackground = () => {
                 htmlFor="upload"
                 className="cursor-pointer flex flex-col items-center gap-3"
               >
+
                 <Eraser className="w-8 h-8 text-gray-400" />
 
-                <p className="text-sm text-gray-500">
-                  Click to upload image
-                </p>
+                {input ? (
+                  <>
+                    <p className="text-sm font-medium text-green-600">
+                      {input.name}
+                    </p>
+                    <span className="text-xs text-gray-400">
+                      Image selected
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-gray-500">
+                      Click to upload image
+                    </p>
+                    <span className="text-xs text-gray-400">
+                      JPG, PNG supported
+                    </span>
+                  </>
+                )}
 
-                <span className="text-xs text-gray-400">
-                  JPG, PNG supported
-                </span>
               </label>
 
             </div>
 
+            {/* IMAGE PREVIEW */}
+
+            {input && (
+              <img
+                src={URL.createObjectURL(input)}
+                alt="preview"
+                className="mt-4 rounded-lg max-h-40 mx-auto"
+              />
+            )}
+
           </div>
 
           {/* BUTTON */}
+
           <button
             disabled={loading}
             className="w-full mt-8 flex items-center justify-center gap-2
@@ -123,7 +157,9 @@ const RemoveBackground = () => {
 
         </form>
 
+
         {/* RIGHT PANEL */}
+
         <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col">
 
           <div className="flex items-center gap-3 mb-6">
@@ -141,7 +177,7 @@ const RemoveBackground = () => {
                 <Eraser className="w-7 h-7" />
               </div>
 
-              <p className="text-sm">
+              <p className="text-sm text-center">
                 Upload an image to remove the background
               </p>
 
@@ -149,15 +185,42 @@ const RemoveBackground = () => {
 
           ) : (
 
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-6">
 
-              <div className="border rounded-xl overflow-hidden">
+              {/* BEFORE AFTER SLIDER */}
+
+              <div className="relative w-full h-[350px] overflow-hidden rounded-xl border">
+
+                {/* BEFORE IMAGE */}
+
+                <img
+                  src={URL.createObjectURL(input)}
+                  className="absolute top-0 left-0 w-full h-full object-cover"
+                />
+
+                {/* AFTER IMAGE */}
+
                 <img
                   src={content}
-                  alt="processed"
-                  className="w-full object-cover"
+                  className="absolute top-0 left-0 h-full object-cover"
+                  style={{ width: `${slider}%` }}
                 />
+
+                {/* SLIDER */}
+
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={slider}
+                  onChange={(e) => setSlider(e.target.value)}
+                  className="absolute bottom-3 left-1/2 -translate-x-1/2 w-3/4"
+                />
+
               </div>
+
+
+              {/* DOWNLOAD */}
 
               <a
                 href={content}
